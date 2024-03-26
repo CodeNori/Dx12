@@ -49,6 +49,7 @@ void Render();
 
 #include "Mesh.h"
 #include "Shader.h"
+#include "Texture.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -76,6 +77,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     Init_Model();
     Init_Shader();
     Init_InputLayout();
+    Init_Texture();
 
     MSG msg = {};
 
@@ -99,7 +101,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 void ReleaseDeviceObjects()
 {
-    SAFE_RELEASE(g_pVertexBuffer);
+    Release_Texture();
+    Release_Shader();
+    Release_Model();
+	
     SAFE_RELEASE(g_pRenderTargetView);
     SAFE_RELEASE(pSwapChain);
     SAFE_RELEASE(pd3dContext);
@@ -113,8 +118,7 @@ void Render()
 
     Render_Shader();
     Render_Model();
-
-    pd3dContext->Draw(3, 0);
+    Render_Texture();
 
     pSwapChain->Present(1, 0);
 }

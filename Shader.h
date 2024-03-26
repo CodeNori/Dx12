@@ -4,6 +4,15 @@ ID3D11PixelShader* g_pPixelShader = nullptr;
 ID3DBlob* g_pVSBlob = nullptr;
 ID3D11InputLayout* g_pVertexLayout = nullptr;
 
+void Release_Shader()
+{
+	SAFE_RELEASE(g_pVertexShader);
+	SAFE_RELEASE(g_pPixelShader);
+	SAFE_RELEASE(g_pVertexLayout);
+	SAFE_RELEASE(g_pVSBlob);
+}
+
+
 HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut)
 {
     HRESULT hr = S_OK;
@@ -83,7 +92,8 @@ HRESULT Init_InputLayout()
 	// Define the input layout
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 	UINT numElements = ARRAYSIZE(layout);
 
