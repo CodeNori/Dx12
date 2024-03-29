@@ -25,6 +25,7 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름�
 HWND gWnd = nullptr;
 INT  gWindowWidth = 0;
 INT  gWindowHeight = 0;
+bool bsUpdateMesh = false;
 
 D3D_DRIVER_TYPE         g_driverType = D3D_DRIVER_TYPE_NULL;    //드라이버 타입
 D3D_FEATURE_LEVEL       g_featureLevel = D3D_FEATURE_LEVEL_11_0;//드라이버 버전
@@ -115,6 +116,10 @@ void Render()
 {
     pd3dContext->ClearRenderTargetView(g_pRenderTargetView, 
         DirectX::Colors::Thistle);
+
+    if (bsUpdateMesh) {
+        UpdateVertexData(pd3dContext, g_SimpleVertex, sizeof(g_SimpleVertex));
+    }
 
     Render_Shader();
     Render_Model();
@@ -207,6 +212,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_KEYDOWN:
+        if (wParam == VK_SPACE) {
+            bsUpdateMesh = true;
+        }
+        break;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);

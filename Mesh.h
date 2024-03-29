@@ -11,6 +11,14 @@ struct SimpleVertex
 	XMFLOAT2  Tex;
 };
 
+SimpleVertex g_SimpleVertex[4] = {
+	{ XMFLOAT3(-0.75f, 0.5f, 0.5f), XMFLOAT2(0.0f, 0.0f) },
+	{ XMFLOAT3(0.75f, 0.5f, 0.5f), XMFLOAT2(1.0f, 0.0f) },
+	{ XMFLOAT3(0.75f, -0.5f, 0.5f), XMFLOAT2(1.0f, 1.0f) },
+	{ XMFLOAT3(-0.75f, -0.5f, 0.5f), XMFLOAT2(0.0f, 1.0f) }
+};
+
+
 void Release_Model()
 {
 	SAFE_RELEASE(g_pVertexBuffer);
@@ -32,6 +40,9 @@ HRESULT Init_Model()
 	bd.ByteWidth = sizeof(SimpleVertex) * 4;
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = 0;
+
+	bd.Usage = D3D11_USAGE_DYNAMIC;
+	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	D3D11_SUBRESOURCE_DATA initData = {};
 	initData.pSysMem = v;
@@ -73,3 +84,13 @@ void Render_Model()
 
 }
 
+void UpdateVertexData(_In_ ID3D11DeviceContext* deviceContext, SimpleVertex* data, int size) 
+{
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	if (SUCCEEDED(deviceContext->Map(g_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
+	{
+		//static_cast<SimpleVertex*>(mappedResource.pData) = value;
+		memcpy(mappedResource.pData, data, size);
+		deviceContext->Unmap(g_pVertexBuffer, 0);
+	}
+}
