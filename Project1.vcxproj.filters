@@ -13,11 +13,8 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="tex">
-      <UniqueIdentifier>{26c043b5-1adf-4b89-a4c4-b8a0f253426f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="DX">
-      <UniqueIdentifier>{11bd60c1-c923-402d-8b6a-511874ea9e5f}</UniqueIdentifier>
+      <UniqueIdentifier>{ec008217-de6b-413f-ac11-d7fdb1bef8aa}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -37,7 +34,7 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="DDSTextureLoader.h">
-      <Filter>tex</Filter>
+      <Filter>DX</Filter>
     </ClInclude>
     <ClInclude Include="Shader.h">
       <Filter>DX</Filter>
@@ -57,7 +54,7 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="DDSTextureLoader.cpp">
-      <Filter>tex</Filter>
+      <Filter>DX</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -74,8 +71,8 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="TriShader.fx">
+    <FxCompile Include="TriShader.fx">
       <Filter>DX</Filter>
-    </None>
+    </FxCompile>
   </ItemGroup>
 </Project>

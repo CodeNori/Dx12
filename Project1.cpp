@@ -25,7 +25,6 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름�
 HWND gWnd = nullptr;
 INT  gWindowWidth = 0;
 INT  gWindowHeight = 0;
-bool bsUpdateMesh = false;
 
 D3D_DRIVER_TYPE         g_driverType = D3D_DRIVER_TYPE_NULL;    //드라이버 타입
 D3D_FEATURE_LEVEL       g_featureLevel = D3D_FEATURE_LEVEL_11_0;//드라이버 버전
@@ -48,9 +47,10 @@ void ReleaseDeviceObjects();
 HRESULT Init_RenderTarget_ViewPort();
 void Render();
 
-#include "Mesh.h"
 #include "Shader.h"
+#include "Mesh.h"
 #include "Texture.h"
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -77,7 +77,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     Init_RenderTarget_ViewPort();
     Init_Model();
     Init_Shader();
-    Init_InputLayout();
+    Init_InputLayOut();
     Init_Texture();
 
     MSG msg = {};
@@ -102,10 +102,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 void ReleaseDeviceObjects()
 {
-    Release_Texture();
-    Release_Shader();
     Release_Model();
-	
+    Release_InputLayout();
+    Release_Shader();
+    Release_Texture();
+
     SAFE_RELEASE(g_pRenderTargetView);
     SAFE_RELEASE(pSwapChain);
     SAFE_RELEASE(pd3dContext);
@@ -117,11 +118,8 @@ void Render()
     pd3dContext->ClearRenderTargetView(g_pRenderTargetView, 
         DirectX::Colors::Thistle);
 
-    if (bsUpdateMesh) {
-        UpdateVertexData(pd3dContext, g_SimpleVertex, sizeof(g_SimpleVertex));
-    }
-
     Render_Shader();
+    Render_InputLayout();
     Render_Model();
     Render_Texture();
 
@@ -214,9 +212,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_KEYDOWN:
         if (wParam == VK_SPACE) {
-            bsUpdateMesh = true;
+            SetTimer(hWnd, 101, 500, nullptr);
         }
         break;
+    case WM_TIMER:
+        //UpdateSimpleVertex(30, 30, 100, 100);
+
+        break;
+
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -338,8 +341,6 @@ HRESULT Init_RenderTarget_ViewPort()
     pBackBuffer->Release();
     if (FAILED(hr))
         return hr;
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     pd3dContext->OMSetRenderTargets(1, &g_pRenderTargetView, nullptr);
 

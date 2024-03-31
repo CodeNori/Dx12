@@ -1,59 +1,48 @@
-#include"DDSTextureLoader.h"
-using namespace DirectX;
+#include "DDSTextureLoader.h"
 
-ID3D11ShaderResourceView* g_pTextureRV = nullptr;
-ID3D11SamplerState* g_pSamplerLinear = nullptr;
-UINT img_Width = 0;
-UINT img_Height = 0;
-
-void Release_Texture()
-{
-	SAFE_RELEASE(g_pTextureRV);
-	SAFE_RELEASE(g_pSamplerLinear);
-}
+ID3D11ShaderResourceView* g_pTextureView = nullptr;
+ID3D11SamplerState* g_pSampler = nullptr;
 
 HRESULT Init_Texture()
 {
 	HRESULT hr;
 
-	ID3D11Texture2D* pTex2D;
-	//ID3D11ShaderResourceView* G_pTextureRV
-	//hr = CreateWICTextureFromFile(pd3dDevice, L"2.png", nullptr, &g_pTextureRV);
-	hr = CreateDDSTextureFromFile(pd3dDevice, 
-									L"seafloor.dds", 
-									(ID3D11Resource**)&pTex2D, 
-									&g_pTextureRV);
-	if (FAILED(hr))
+	hr = CreateDDSTextureFromFile(pd3dDevice,
+		L"seafloor.dds",
+		nullptr,
+		&g_pTextureView);
+	if (FAILED(hr)) {
+		MessageBox(0, L"Texture 로딩 에러!!!", L"Error", MB_OK);
 		return hr;
-
-	{
-		D3D11_TEXTURE2D_DESC desc;
-		pTex2D->GetDesc(&desc);
-		img_Width = desc.Width;
-		img_Height = desc.Height;
 	}
 
-	pTex2D->Release();
+	D3D11_SAMPLER_DESC desc = {};
+	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	desc.MinLOD = 0;
+	desc.MaxLOD = D3D11_FLOAT32_MAX;
 
+	hr = pd3dDevice->CreateSamplerState(&desc, &g_pSampler);
+	if (FAILED(hr)) {
+		MessageBox(0, L"Sampler 만들기 실퍠 !!", L"Error", MB_OK);
 
-	D3D11_SAMPLER_DESC sampDesc = {};
-	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	sampDesc.MinLOD = 0;
-	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-	hr = pd3dDevice->CreateSamplerState(&sampDesc, &g_pSamplerLinear);
-	if (FAILED(hr))
-		return hr;
+	}
 
-	return S_OK;
+	return hr;
+}
+
+void Release_Texture()
+{
+	SAFE_RELEASE(g_pTextureView);
+	SAFE_RELEASE(g_pSampler);
 }
 
 void Render_Texture()
 {
-	// Texture
-	pd3dContext->PSSetShaderResources(0, 1, &g_pTextureRV);
-	pd3dContext->PSSetSamplers(0, 1, &g_pSamplerLinear);
+	pd3dContext->PSSetShaderResources(0, 1, &g_pTextureView);
+	pd3dContext->PSSetSamplers(0, 1, &g_pSampler);
 }
+
