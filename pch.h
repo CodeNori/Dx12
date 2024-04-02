@@ -10,4 +10,11 @@
 // 여기에 미리 컴파일하려는 헤더 추가
 #include "framework.h"
 
+#include <d3d11.h>
+#include <DirectXColors.h>
+#include <DirectXMath.h>
+#include <d3dcompiler.h>
+
+#define SAFE_RELEASE(x) if(x){ x->Release(); x=nullptr; }
+
 #endif //PCH_H

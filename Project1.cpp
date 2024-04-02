@@ -8,6 +8,7 @@
 #include <DirectXColors.h>
 #include <DirectXMath.h>
 #include <d3dcompiler.h>
+#include "Sprite.h"
 
 #pragma comment( lib, "d3d11.lib")
 #pragma comment( lib, "d3dCompiler.lib")
@@ -34,7 +35,7 @@ ID3D11Device* pd3dDevice = nullptr;                     // the pointer to our Di
 ID3D11DeviceContext* pd3dContext = nullptr;
 ID3D11RenderTargetView* g_pRenderTargetView = nullptr;
 
-
+Sprite* g_Sprite1;
 
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
@@ -75,10 +76,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     InitDevice();
     Init_RenderTarget_ViewPort();
-    Init_Model();
-    Init_Shader();
-    Init_InputLayOut();
-    Init_Texture();
+
+    g_Sprite1 = new Sprite;
+    g_Sprite1->Init();
 
     MSG msg = {};
 
@@ -95,6 +95,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
+    delete g_Sprite1;
+
     ReleaseDeviceObjects();
 
     return (int) msg.wParam;
@@ -102,11 +104,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 void ReleaseDeviceObjects()
 {
-    Release_Model();
-    Release_InputLayout();
-    Release_Shader();
-    Release_Texture();
-
     SAFE_RELEASE(g_pRenderTargetView);
     SAFE_RELEASE(pSwapChain);
     SAFE_RELEASE(pd3dContext);
@@ -118,10 +115,7 @@ void Render()
     pd3dContext->ClearRenderTargetView(g_pRenderTargetView, 
         DirectX::Colors::Thistle);
 
-    Render_Shader();
-    Render_InputLayout();
-    Render_Model();
-    Render_Texture();
+    g_Sprite1->Render();
 
     pSwapChain->Present(1, 0);
 }
@@ -196,6 +190,51 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    return TRUE;
 }
 
+void ChangeRectLT()
+{
+    static int rectLeft = 30;
+    static int rectTop = 30;
+    //참일경우 +, 거짓일경우 -
+    static bool rectLeftCheck = true;
+    static bool rectTopCheck = true;
+
+    if (rectLeftCheck)
+    {
+        rectLeft += 10;
+        if (rectLeft >= gWindowWidth - 100)
+        {
+            rectLeftCheck = false;
+        }
+    }
+    else
+    {
+        rectLeft -= 10;
+        if (rectLeft <= 0)
+        {
+            rectLeftCheck = true;
+        }
+    }
+    if (rectTopCheck)
+    {
+        rectTop += 10;
+        if (rectTop >= gWindowHeight - 100)
+        {
+            rectTopCheck = false;
+        }
+    }
+    else
+    {
+        rectTop -= 10;
+        if (rectTop <= 0)
+        {
+            rectTopCheck = true;
+        }
+    }
+
+    g_Sprite1->Move(rectLeft, rectTop, 100, 100);
+
+}
+
 //
 //  함수: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -212,12 +251,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_KEYDOWN:
         if (wParam == VK_SPACE) {
-            SetTimer(hWnd, 101, 500, nullptr);
+            SetTimer(hWnd, 101, 50, nullptr);
         }
         break;
     case WM_TIMER:
-        //UpdateSimpleVertex(30, 30, 100, 100);
-
+        ChangeRectLT();
         break;
 
     case WM_COMMAND:
