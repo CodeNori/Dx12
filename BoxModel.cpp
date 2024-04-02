@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Sprite.h"
+#include "BoxModel.h"
 #include "DDSTextureLoader.h"
 
 extern INT  gWindowWidth;
@@ -7,49 +7,40 @@ extern INT  gWindowHeight;
 extern ID3D11Device* pd3dDevice;
 extern ID3D11DeviceContext* pd3dContext;
 
-XMFLOAT3 ScreenToNDC(int x, int y)
+
+
+HRESULT BoxModel::Creat_Mesh()
 {
-	int half_W = gWindowWidth / 2;
-	int half_H = gWindowHeight / 2;
+	SpriteVertex g_SV[] =
+	{
+		{XMFLOAT3(-0.5f, 0.5f, -0.5f), XMFLOAT2(0.f, 0.f)},
+		{XMFLOAT3(0.5f, 0.5f, -0.5f), XMFLOAT2(1.f, 0.f)},
+		{XMFLOAT3(0.5f,-0.5f, -0.5f), XMFLOAT2(1.f, 1.f)},
+		{XMFLOAT3(-0.5f,-0.5f, -0.5f), XMFLOAT2(0.f, 1.f)},
 
-	x -= half_W;
-	y -= half_H;
+		{XMFLOAT3(-0.5f, 0.5f, 0.5f), XMFLOAT2(0.f, 0.f)},
+		{XMFLOAT3(0.5f, 0.5f, 0.5f), XMFLOAT2(1.f, 0.f)},
+		{XMFLOAT3(0.5f, 0.5f, -0.5f), XMFLOAT2(1.f, 1.f)},
+		{XMFLOAT3(-0.5f,0.5f, -0.5f), XMFLOAT2(0.f, 1.f)}
+	};
 
-	float fx = (float)x / (float)half_W;
-	float fy = (float)y / (float)half_H;
-
-	fy = -fy;
-
-	return XMFLOAT3(fx, fy, 0.5f);
-
-}
-
-void Sprite::Move(int left, int top, int width, int height)
-{
-	g_SV[0].Pos = ScreenToNDC(left, top);
-	g_SV[0].Tex = XMFLOAT2(0.f, 0.f);
-	g_SV[1].Pos = ScreenToNDC(left + width, top);
-	g_SV[1].Tex = XMFLOAT2(1.f, 0.f);
-	g_SV[2].Pos = ScreenToNDC(left + width, top + height);
-	g_SV[2].Tex = XMFLOAT2(1.f, 1.f);
-	g_SV[3].Pos = ScreenToNDC(left, top + height);
-	g_SV[3].Tex = XMFLOAT2(0.f, 1.f);
-}
-
-HRESULT Sprite::Creat_Mesh()
-{
-	int half_W = gWindowWidth / 2;
-	int half_H = gWindowHeight / 2;
-	Move(half_W -(half_W/2), half_H -(half_H/2), half_W, half_H);
+	WORD  indexs[] =
+	{
+		0,1,2,
+		0,2,3,
+		4,5,6,
+		4,6,7
+	};
+	m_IndexCount = 12;
 
 	D3D11_BUFFER_DESC bd = {};
 	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(SpriteVertex) * 4;
+	bd.ByteWidth = sizeof(SpriteVertex) * 8;
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = 0;
 
-	bd.Usage = D3D11_USAGE_DYNAMIC;
-	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	// bd.Usage = D3D11_USAGE_DYNAMIC;
+	// bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	D3D11_SUBRESOURCE_DATA initData = {};
 	initData.pSysMem = g_SV;
@@ -61,15 +52,10 @@ HRESULT Sprite::Creat_Mesh()
 		return hr;
 	}
 
-	WORD  indexs[] =
-	{
-		0,1,2,
-		0,2,3
-	};
 
 	D3D11_BUFFER_DESC bd1 = {};
 	bd1.Usage = D3D11_USAGE_DEFAULT;
-	bd1.ByteWidth = sizeof(WORD) * 6;
+	bd1.ByteWidth = sizeof(WORD) * m_IndexCount;
 	bd1.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bd1.CPUAccessFlags = 0;
 
@@ -84,25 +70,26 @@ HRESULT Sprite::Creat_Mesh()
 }
 
 
-void Sprite::UpdateVertexData()
+void BoxModel::UpdateConstantData()
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	if (SUCCEEDED(pd3dContext->Map(g_pVertexBuffer,
+	if (SUCCEEDED(pd3dContext->Map(g_pConstantBuffer,
 		0,
 		D3D11_MAP_WRITE_DISCARD,
 		0,
 		&mappedResource)))
 	{
-		SpriteVertex* pV =
-			static_cast<SpriteVertex*>(mappedResource.pData);
-		for (int i = 0; i < 4; ++i)
-			pV[i] = g_SV[i];
+		CB_WorldViewProj* pV =
+			static_cast<CB_WorldViewProj*>(mappedResource.pData);
+		pV->World = XMMatrixTranspose(m_WVP.World);
+		pV->View  = XMMatrixTranspose(m_WVP.View);
+		pV->Proj = XMMatrixTranspose(m_WVP.Proj);
 
-		pd3dContext->Unmap(g_pVertexBuffer, 0);
+		pd3dContext->Unmap(g_pConstantBuffer, 0);
 	}
 }
 
-void Sprite::Render()
+void BoxModel::Render()
 {
 	// Shader
 	pd3dContext->VSSetShader(g_pVertexShader, nullptr, 0);
@@ -117,7 +104,9 @@ void Sprite::Render()
 
 
 	// Mesh
-	UpdateVertexData();
+	UpdateConstantData();
+	pd3dContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+	// Mesh
 
 	UINT stride = sizeof(SpriteVertex);
 	UINT offset = 0;
@@ -125,12 +114,14 @@ void Sprite::Render()
 	pd3dContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 	pd3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	pd3dContext->DrawIndexed(6, 0, 0);
+	pd3dContext->DrawIndexed(m_IndexCount, 0, 0);
 
 }
 
-void Sprite::Release()
+void BoxModel::Release()
 {
+	SAFE_RELEASE(g_pConstantBuffer);
+
 	// Texture
 	SAFE_RELEASE(g_pTextureView);
 	SAFE_RELEASE(g_pSampler);
@@ -149,7 +140,7 @@ void Sprite::Release()
 }
 
 
-HRESULT Sprite::Create_InputLayOut()
+HRESULT BoxModel::Create_InputLayOut()
 {
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
@@ -172,34 +163,9 @@ HRESULT Sprite::Create_InputLayOut()
 }
 
 
-HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut)
-{
-	HRESULT hr = S_OK;
+HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
 
-	DWORD dwShaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
-#ifdef _DEBUG
-	dwShaderFlags |= D3DCOMPILE_DEBUG;
-	dwShaderFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;
-#endif
-
-	ID3DBlob* pErrorBlob = nullptr;
-	hr = D3DCompileFromFile(szFileName, nullptr, nullptr, szEntryPoint, szShaderModel,
-		dwShaderFlags, 0, ppBlobOut, &pErrorBlob);
-	if (FAILED(hr))
-	{
-		if (pErrorBlob)
-		{
-			OutputDebugStringA(reinterpret_cast<const char*>(pErrorBlob->GetBufferPointer()));
-			pErrorBlob->Release();
-		}
-		return hr;
-	}
-	if (pErrorBlob) pErrorBlob->Release();
-
-	return S_OK;
-}
-
-HRESULT Sprite::Create_Shader()
+HRESULT BoxModel::Create_Shader()
 {
 	HRESULT hr = CompileShaderFromFile(
 		mVSfileName,
@@ -246,7 +212,32 @@ HRESULT Sprite::Create_Shader()
 }
 
 
-HRESULT Sprite::Create_Texture()
+HRESULT BoxModel::Create_ConstantBuffer()
+{
+	HRESULT hr;
+
+	D3D11_BUFFER_DESC bd = {};
+	bd.Usage = D3D11_USAGE_DYNAMIC;
+	bd.ByteWidth = sizeof(CB_WorldViewProj);
+	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	hr = pd3dDevice->CreateBuffer(&bd, nullptr, &g_pConstantBuffer);
+	if (FAILED(hr))
+		return hr;
+
+	m_WVP.World = XMMatrixIdentity();
+
+	XMVECTOR Eye = XMVectorSet(2.5f, 2.5f, -2.5f, 0.0f);
+	XMVECTOR At = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	m_WVP.View = XMMatrixLookAtLH(Eye, At, Up);
+
+	m_WVP.Proj = XMMatrixPerspectiveFovLH(XM_PIDIV4, gWindowWidth / (FLOAT)gWindowHeight, 0.01f, 100.0f);
+
+	return S_OK;
+}
+
+HRESULT BoxModel::Create_Texture()
 {
 	HRESULT hr;
 

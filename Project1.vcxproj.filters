@@ -48,6 +48,12 @@
     <ClInclude Include="Sprite.h">
       <Filter>DX</Filter>
     </ClInclude>
+    <ClInclude Include="IModel.h">
+      <Filter>DX</Filter>
+    </ClInclude>
+    <ClInclude Include="BoxModel.h">
+      <Filter>DX</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Project1.cpp">
@@ -60,6 +66,12 @@
       <Filter>DX</Filter>
     </ClCompile>
     <ClCompile Include="Sprite.cpp">
+      <Filter>DX</Filter>
+    </ClCompile>
+    <ClCompile Include="IModel.cpp">
+      <Filter>DX</Filter>
+    </ClCompile>
+    <ClCompile Include="BoxModel.cpp">
       <Filter>DX</Filter>
     </ClCompile>
   </ItemGroup>
@@ -78,6 +90,9 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="TriShader.fx">
+      <Filter>DX</Filter>
+    </FxCompile>
+    <FxCompile Include="BoxShader.fx">
       <Filter>DX</Filter>
     </FxCompile>
   </ItemGroup>

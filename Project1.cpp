@@ -9,6 +9,7 @@
 #include <DirectXMath.h>
 #include <d3dcompiler.h>
 #include "Sprite.h"
+#include "BoxModel.h"
 
 #pragma comment( lib, "d3d11.lib")
 #pragma comment( lib, "d3dCompiler.lib")
@@ -36,7 +37,7 @@ ID3D11DeviceContext* pd3dContext = nullptr;
 ID3D11RenderTargetView* g_pRenderTargetView = nullptr;
 
 Sprite* g_Sprite1;
-
+BoxModel* g_BoxModel;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -47,6 +48,7 @@ HRESULT InitDevice();
 void ReleaseDeviceObjects();
 HRESULT Init_RenderTarget_ViewPort();
 void Render();
+void Update();
 
 #include "Shader.h"
 #include "Mesh.h"
@@ -80,6 +82,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     g_Sprite1 = new Sprite;
     g_Sprite1->Init();
 
+    g_BoxModel = new BoxModel;
+    g_BoxModel->Init();
+
     MSG msg = {};
 
     // 기본 메시지 루프입니다:
@@ -91,11 +96,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
         else {
+            Update();
             Render();
         }
     }
 
     delete g_Sprite1;
+    delete g_BoxModel;
 
     ReleaseDeviceObjects();
 
@@ -110,12 +117,28 @@ void ReleaseDeviceObjects()
     SAFE_RELEASE(pd3dDevice);
 }
 
+void Update()
+{
+    XMMATRIX world = XMMatrixIdentity();
+    g_BoxModel->SetWorldTM(world);
+
+	XMVECTOR Eye = XMVectorSet(2.5f, 2.5f, -2.5f, 0.0f);
+	XMVECTOR At = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    XMMATRIX view = XMMatrixLookAtLH(Eye, At, Up);
+	g_BoxModel->SetViewTM(view);
+
+    XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV4, gWindowWidth / (FLOAT)gWindowHeight, 0.01f, 100.0f);
+    g_BoxModel->SetProjTM(proj);
+}
+
 void Render()
 {
     pd3dContext->ClearRenderTargetView(g_pRenderTargetView, 
         DirectX::Colors::Thistle);
 
-    g_Sprite1->Render();
+    //g_Sprite1->Render();
+    g_BoxModel->Render();
 
     pSwapChain->Present(1, 0);
 }
